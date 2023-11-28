@@ -1,6 +1,6 @@
 # 3D Mobile Touch Screen Input For Godot 3.5.3v
 
-This Script is a modified version for a mobile Controller in Godot.
+This Script is a modified version for a mobile Controller in Godot. [Original Scripter](https://youtu.be/01BCi_tIXsw?si=uh_8ZIA2lcCL6tHU)
 
 What you need in this tutorial?
 ```
