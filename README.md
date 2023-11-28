@@ -10,6 +10,7 @@ that all
 ```
 
 [Here]() Tutorial for Helping you guys
-
+Download The Script and put in the player body
+>Change the Name of The Node to make sure it fit
 ## MIT LICENSE
 > Change the Value Based on your need !
