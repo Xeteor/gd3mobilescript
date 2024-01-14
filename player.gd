@@ -41,9 +41,9 @@ func _physics_process(delta):
 	if Input.is_action_pressed("backward"):
 		dir += camera.global_transform.basis.z
 	if Input.is_action_pressed("right"):
-		dir -= camera.global_transform.basis.x
-	if Input.is_action_pressed("left"):
 		dir += camera.global_transform.basis.x
+	if Input.is_action_pressed("left"):
+		dir -= camera.global_transform.basis.x
 	
 	# Normalizing the input directions
 	dir = dir.normalized()
