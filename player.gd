@@ -1,46 +1,104 @@
 extends KinematicBody
 
-var jump = 7
-var speed = 10
-var gravity = 9.8 * 2
-var cameraAcc = 50
-var sens = 0.3
+const MOUSE_SENSITIVITY = 0.1
 
-var snap
-var direction = Vector3()
-var velocity = Vector3()
-var gravelocity = Vector3()
-var movement = Vector3()
-
-onready var head = $head
 onready var camera = $head/Camera
 
-func _input(event):
-	if event is InputEventScreenDrag:
-		rotate_y(deg2rad(-event.relative.x) * sens)
-		head.rotate_x(deg2rad(-event.relative.y) * sens)
-		head.rotation.x = clamp(head.rotation.x, deg2rad(-90), deg2rad(90))
+# Movement
+var velocity = Vector3.ZERO
+var current_vel = Vector3.ZERO
+var dir = Vector3.ZERO
+
+const SPEED = 10
+const SPRINT_SPEED = 15
+const ACCEL = 15.0
+
+# Jump
+const GRAVITY = -40.0
+const JUMP_SPEED = 15
+var jump_counter = 0
+const AIR_ACCEL = 9.0
+
+
+
+func _ready():
+	pass
+
+
+
+func _process(delta):
+	pass
+
+
 
 func _physics_process(delta):
-	direction = Vector3.ZERO
-	var HorizontalRotation = global_transform.basis.get_euler().y
-	var Forwardinput = Input.get_action_strength("ui_down") - Input.get_action_strength("ui_up")
-	var Horizontalinput = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
-	direction = Vector3(Horizontalinput, 0, Forwardinput).rotated(Vector3.UP, HorizontalRotation).normalized()
 	
+	# Get the input directions
+	dir = Vector3.ZERO
+	
+	if Input.is_action_pressed("forward"):
+		dir -= camera.global_transform.basis.z
+	if Input.is_action_pressed("backward"):
+		dir += camera.global_transform.basis.z
+	if Input.is_action_pressed("right"):
+		dir -= camera.global_transform.basis.x
+	if Input.is_action_pressed("left"):
+		dir += camera.global_transform.basis.x
+	
+	# Normalizing the input directions
+	dir = dir.normalized()
+	
+	# Apply gravity
+	velocity.y += GRAVITY * delta
 	
 	if is_on_floor():
-		snap = -get_floor_normal()
-		gravelocity = Vector3.ZERO
-	else:
-		snap = Vector3.DOWN
-		gravelocity += Vector3.DOWN * gravity * delta
+		jump_counter = 0
 	
-	if Input.is_action_pressed("jump") and is_on_floor():
-		snap = Vector3.DOWN
-		gravelocity = Vector3.UP * jump
+	# Jump
+	if Input.is_action_just_pressed("jump") and jump_counter < 2:
+		jump_counter += 1
+		velocity.y = JUMP_SPEED
 	
-	velocity = velocity.linear_interpolate(direction * speed, delta)
-	movement = velocity + gravelocity
+	# Set speed and target velocity
+	var speed = SPRINT_SPEED if Input.is_action_pressed("Shift") else SPEED
+	var target_vel = dir * speed
 	
-	move_and_slide_with_snap(movement, snap, Vector3.UP)
+	# Smooth out the player's movement
+	var accel = ACCEL if is_on_floor() else AIR_ACCEL
+	current_vel = current_vel.linear_interpolate(target_vel, accel * delta)
+	
+	velocity.x = current_vel.x
+	velocity.z = current_vel.z
+	
+	velocity = move_and_slide(velocity, Vector3.UP, true, 4, deg2rad(45))
+
+
+
+func _input(event):
+	#Swap between PcControl/MobileControl
+	MobileControl(event)
+
+
+
+#For Mobile Controller
+func MobileControl(event):
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	if event is InputEventScreenDrag:
+		# Rotates the view vertically
+		$head.rotate_x(deg2rad(event.relative.y * MOUSE_SENSITIVITY * -1))
+		$head.rotation_degrees.x = clamp($head.rotation_degrees.x, -75, 75)
+		
+		# Rotates the view horizontally
+		self.rotate_y(deg2rad(event.relative.x * MOUSE_SENSITIVITY * -1))
+
+#For Pc Controller
+func PcControl(event):
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	
+	if event is InputEventMouseMotion:
+		# Rotates the view vertically
+		$head.rotate_x(deg2rad(event.relative.y * MOUSE_SENSITIVITY * -1))
+		$head.rotation_degrees.x = clamp($head.rotation_degrees.x, -75, 75)
+		
+		# Rotates the view horizontally
+		self.rotate_y(deg2rad(event.relative.x * MOUSE_SENSITIVITY * -1))
